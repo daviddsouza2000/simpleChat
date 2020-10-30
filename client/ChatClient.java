@@ -90,5 +90,25 @@ public class ChatClient extends AbstractClient
     catch(IOException e) {}
     System.exit(0);
   }
+  /**
+   * Hook method called after the connection has been closed.
+   */
+  @Override
+  protected void connectionClosed() {
+	  clientUI.display("The connection has been closed");
+  }
+	
+  /**
+   * Hook method called each time an exception is thrown by the client's
+   * thread that is waiting for messages from the server. 
+   * @param exception
+   *            the exception raised.
+   */
+  @Override
+  protected void connectionException(Exception exception) {
+	  clientUI.display("The server has shut down");
+  }
 }
+
+
 //End of ChatClient class

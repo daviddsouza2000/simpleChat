@@ -45,8 +45,7 @@ public class EchoServer extends AbstractServer
    * @param msg The message received from the client.
    * @param client The connection from which the message originated.
    */
-  public void handleMessageFromClient
-    (Object msg, ConnectionToClient client)
+  public void handleMessageFromClient(Object msg, ConnectionToClient client)
   {
     System.out.println("Message received: " + msg + " from " + client);
     this.sendToAllClients(msg);
@@ -70,6 +69,22 @@ public class EchoServer extends AbstractServer
   {
     System.out.println
       ("Server has stopped listening for connections.");
+  }
+  
+  
+  /**
+   * Hook method called each time a new client connection is
+   * accepted.
+   * @param client the connection connected to the client.
+   */
+  @Override
+  protected void clientConnected(ConnectionToClient client) {
+	  System.out.println("Client has connected");
+  }
+  
+  @Override
+  synchronized protected void clientDisconnected(ConnectionToClient client) {
+	  System.out.println("Client has disconnected");
   }
   
   //Class methods ***************************************************
