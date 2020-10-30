@@ -78,9 +78,9 @@ public class EchoServer extends AbstractServer
   /**
    * This method handles all data coming from the UI            
    *
-   * @param message The message from the UI.    
+   * @param message The message from the UI.
    */
-  public void handleMessageFromServerUI(String message) //TODO implement this
+  public void handleMessageFromServerUI(String message)
   {
     try
     {
@@ -117,7 +117,7 @@ public class EchoServer extends AbstractServer
     catch(IOException e)
     {
       serverUI.display("Could not send message to clients.  Terminating server.");
-      quit();
+      //close();
     }
   }
     
