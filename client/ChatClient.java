@@ -68,7 +68,36 @@ public class ChatClient extends AbstractClient
   {
     try
     {
-      sendToServer(message);
+    	// if client entered a command
+    	if(message.charAt(0) == '#') {
+    		String [] command = message.split(" ");
+    		switch(command[0]) {
+    			case "#quit":
+    				quit();
+    				break;
+    			case "#logoff": //not sure if this is right 
+    				closeConnection();
+    				break;
+    			case "#sethost":
+    				setHost(command[1]); //only allowed if client is logged off; displays error message otherwise
+    				break;
+    			case "#setport":
+    				setPort(Integer.parseInt(command[1])); //only allowed if client is logged off; displays error message otherwise
+    				break;
+    			case "#login":
+    				if (isConnected()) clientUI.display("Already logged in");
+    				else openConnection();
+    				break;
+    			case "#gethost":
+    				clientUI.display(getHost());
+    				break;
+    			case "#getport":
+    				clientUI.display(Integer.toString(getPort()));
+    				break;
+    		}
+    	} else {
+    		sendToServer(message);
+    	}
     }
     catch(IOException e)
     {
