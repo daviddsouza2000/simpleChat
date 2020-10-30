@@ -3,6 +3,8 @@
 // license found at www.lloseng.com 
 
 import java.io.*;
+
+import common.ChatIF;
 import ocsf.server.*;
 
 /**
@@ -17,6 +19,15 @@ import ocsf.server.*;
  */
 public class EchoServer extends AbstractServer 
 {
+	
+ //Instance variables **********************************************
+  
+  /**
+   * The interface type variable.  It allows the implementation of 
+   * the display method in the server.
+   */
+  ChatIF serverUI; 
+  
   //Class variables *************************************************
   
   /**
@@ -35,6 +46,19 @@ public class EchoServer extends AbstractServer
   {
     super(port);
   }
+  
+  /**
+   * Constructs an instance of the echo server.
+   *
+   * @param port The port number to connect on.
+   * @param clientUI The interface type variable.
+   */
+  public EchoServer(int port, ChatIF serverUI) 
+  {
+    super(port);
+    this.serverUI = serverUI;
+    
+  }
 
   
   //Instance methods ************************************************
@@ -49,6 +73,52 @@ public class EchoServer extends AbstractServer
   {
     System.out.println("Message received: " + msg + " from " + client);
     this.sendToAllClients(msg);
+  }
+  
+  /**
+   * This method handles all data coming from the UI            
+   *
+   * @param message The message from the UI.    
+   */
+  public void handleMessageFromServerUI(String message) //TODO implement this
+  {
+    try
+    {
+    	// if client entered a command
+    	if(message.charAt(0) == '#') {
+    		String [] command = message.split(" ");
+    		switch(command[0]) {
+    			case "#quit": //not sure if this is right 
+    				close();
+    				break;
+    			case "#stop": //not sure if this is right 
+    				stopListening();
+    				break;
+    			case "#close": //not sure if this is right
+    				close();
+    				break;
+    			case "#setport":
+    				setPort(Integer.parseInt(command[1])); //only allowed if server is closed; displays error message otherwise
+    				break;
+    			case "#login":
+    				if (isListening()) serverUI.display("Already logged in");
+    				else listen();
+    				break;
+    			case "#getport":
+    				serverUI.display(Integer.toString(getPort()));
+    				break;
+    		}
+    	} else {
+    		String serverMessage = "SERVER MSG>" + message;
+    		serverUI.display(serverMessage);
+    		this.sendToAllClients(serverMessage);
+    	}
+    }
+    catch(IOException e)
+    {
+      serverUI.display("Could not send message to clients.  Terminating server.");
+      quit();
+    }
   }
     
   /**
