@@ -46,7 +46,14 @@ public class ServerConsole implements ChatIF
     try 
     {
       sv = new EchoServer(port, this);
-      
+      try 
+      {
+        sv.listen(); //Start listening for connections
+      } 
+      catch (Exception ex) 
+      {
+        System.out.println("ERROR - Could not listen for clients!");
+      }
       
     } 
     catch(Exception exception) 

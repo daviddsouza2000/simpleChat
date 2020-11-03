@@ -80,18 +80,39 @@ public class ChatClient extends AbstractClient
     			case "#quit":
     				quit();
     				break;
-    			case "#logoff": //not sure if this is right 
+    			case "#logoff":
     				closeConnection();
     				break;
     			case "#sethost":
-    				setHost(command[1]); //only allowed if client is logged off; displays error message otherwise
+    				if (isConnected()) {
+    					clientUI.display("Must first log off");
+    				}
+    				else {
+    					try {
+    						setHost(command[1]);
+    						clientUI.display("Host set to" + command[1]);
+    					} catch(ArrayIndexOutOfBoundsException e) {
+    						clientUI.display("Host not specified");
+    					}
+    				}
     				break;
     			case "#setport":
-    				setPort(Integer.parseInt(command[1])); //only allowed if client is logged off; displays error message otherwise
+    				if (isConnected()) {
+    					clientUI.display("Must first log off");
+    				}
+    				else {
+    					try {
+    						setPort(Integer.parseInt(command[1]));
+    						clientUI.display("Port set to" + Integer.parseInt(command[1]));
+    					} catch(ArrayIndexOutOfBoundsException e) {
+    						clientUI.display("Port not specified");
+    					}
+    				}
     				break;
     			case "#login":
     				if (isConnected()) clientUI.display("Already logged in");
     				else openConnection();
+    				sendToServer(message);
     				break;
     			case "#gethost":
     				clientUI.display(getHost());
@@ -121,7 +142,9 @@ public class ChatClient extends AbstractClient
     {
       closeConnection();
     }
-    catch(IOException e) {}
+    catch(IOException e) {
+    	System.exit(0);
+    }
     System.exit(0);
   }
   
@@ -154,7 +177,8 @@ public class ChatClient extends AbstractClient
    */
   @Override
   protected void connectionException(Exception exception) {
-	  clientUI.display("The server has shut down");
+	  clientUI.display("WARNING - The server has stopped listening for connection \n SERVER SHUTTING DOWN! DISCONNECTING! \n "
+	  		+ "Abnormal termination of connection");
   }
 }
 

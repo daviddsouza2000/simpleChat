@@ -28,6 +28,7 @@ public class EchoServer extends AbstractServer
    */
   ChatIF serverUI; 
   
+  
   //Class variables *************************************************
   
   /**
@@ -71,14 +72,31 @@ public class EchoServer extends AbstractServer
    */
   public void handleMessageFromClient(Object msg, ConnectionToClient client)
   {
-	  String message = msg.toString();
-	  String[] messageSplit = message.split(" ");
-	  if(messageSplit[0].equals("#login")) {
-		  
+	  System.out.println("Message received: " + msg + " from " + client.getInfo("loginID"));
+	  
+	  if(client.getInfo("newConnect").toString().equals("new")) {
+		  String message = msg.toString();
+		  String[] messageSplit = message.split(" ");
+		  if(messageSplit[0].equals("#login")) {  
+			  client.setInfo("loginID", messageSplit[1]);
+			  System.out.println(messageSplit[1] + " has logged on.");
+			  try {
+				  client.sendToClient(messageSplit[1] + " has logged on.");
+			  } catch(IOException e) {
+				  System.exit(1);
+			  }
+		  } else {
+			  try {
+				  client.sendToClient("Error - must login first");
+				  client.close();
+			  } catch(IOException e) {
+				  System.exit(1);
+			  }
+		  }
+		  client.setInfo("newConnect", "false");
 	  }
 	  
-	  System.out.println("Message received: " + msg + " from " + client);
-	  this.sendToAllClients(msg);
+	  this.sendToAllClients(client.getInfo("loginID") + ">" + msg);
   }
   
   /**
@@ -96,6 +114,7 @@ public class EchoServer extends AbstractServer
     		switch(command[0]) {
     			case "#quit": //not sure if this is right 
     				close();
+    				System.exit(1);
     				break;
     			case "#stop": //not sure if this is right 
     				stopListening();
@@ -104,10 +123,19 @@ public class EchoServer extends AbstractServer
     				close();
     				break;
     			case "#setport":
-    				setPort(Integer.parseInt(command[1])); //only allowed if server is closed; displays error message otherwise
+    				if (isListening()) {
+    					serverUI.display("Error - please close server before changing port");
+    				} else {
+    					try {
+    						setPort(Integer.parseInt(command[1]));
+    						serverUI.display("port set to: " + Integer.parseInt(command[1]));
+    					} catch (Exception e) {
+    						serverUI.display("Please specify port");
+    					}
+    				}
     				break;
-    			case "#login":
-    				if (isListening()) serverUI.display("Already logged in");
+    			case "#start":
+    				if (isListening()) serverUI.display("Already listening");
     				else listen();
     				break;
     			case "#getport":
@@ -124,6 +152,7 @@ public class EchoServer extends AbstractServer
     {
       serverUI.display("Could not send message to clients.  Terminating server.");
       //close();
+      System.exit(1);
     }
   }
     
@@ -155,12 +184,13 @@ public class EchoServer extends AbstractServer
    */
   @Override
   protected void clientConnected(ConnectionToClient client) {
-	  System.out.println("Client has connected");
+	  System.out.println("A new client is attempting to connect to the server.");
+	  client.setInfo("newConnect", "new");
   }
   
   @Override
   synchronized protected void clientDisconnected(ConnectionToClient client) {
-	  System.out.println("Client has disconnected");
+	  System.out.println(client.getInfo("loginID") + " has disconnected");
   }
   
   //Class methods ***************************************************
