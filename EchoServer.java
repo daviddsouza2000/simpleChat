@@ -3,6 +3,8 @@
 // license found at www.lloseng.com 
 
 import java.io.*;
+
+import common.ChatIF;
 import ocsf.server.*;
 
 /**
@@ -17,6 +19,16 @@ import ocsf.server.*;
  */
 public class EchoServer extends AbstractServer 
 {
+	
+ //Instance variables **********************************************
+  
+  /**
+   * The interface type variable.  It allows the implementation of 
+   * the display method in the server.
+   */
+  ChatIF serverUI; 
+  
+  
   //Class variables *************************************************
   
   /**
@@ -35,6 +47,19 @@ public class EchoServer extends AbstractServer
   {
     super(port);
   }
+  
+  /**
+   * Constructs an instance of the echo server.
+   *
+   * @param port The port number to connect on.
+   * @param clientUI The interface type variable.
+   */
+  public EchoServer(int port, ChatIF serverUI) 
+  {
+    super(port);
+    this.serverUI = serverUI;
+    
+  }
 
   
   //Instance methods ************************************************
@@ -47,8 +72,88 @@ public class EchoServer extends AbstractServer
    */
   public void handleMessageFromClient(Object msg, ConnectionToClient client)
   {
-    System.out.println("Message received: " + msg + " from " + client);
-    this.sendToAllClients(msg);
+	  System.out.println("Message received: " + msg + " from " + client.getInfo("loginID"));
+	  
+	  if(client.getInfo("newConnect").toString().equals("new")) {
+		  String message = msg.toString();
+		  String[] messageSplit = message.split(" ");
+		  if(messageSplit[0].equals("#login")) {  
+			  client.setInfo("loginID", messageSplit[1]);
+			  System.out.println(messageSplit[1] + " has logged on.");
+			  try {
+				  client.sendToClient(messageSplit[1] + " has logged on.");
+			  } catch(IOException e) {
+				  System.exit(1);
+			  }
+		  } else {
+			  try {
+				  client.sendToClient("Error - must login first");
+				  client.close();
+			  } catch(IOException e) {
+				  System.exit(1);
+			  }
+		  }
+		  client.setInfo("newConnect", "false");
+	  }
+	  
+	  this.sendToAllClients(client.getInfo("loginID") + ">" + msg);
+  }
+  
+  /**
+   * This method handles all data coming from the UI            
+   *
+   * @param message The message from the UI.
+   */
+  public void handleMessageFromServerUI(String message)
+  {
+    try
+    {
+    	// if client entered a command
+    	if(message.charAt(0) == '#') {
+    		String [] command = message.split(" ");
+    		switch(command[0]) {
+    			case "#quit": //not sure if this is right 
+    				close();
+    				System.exit(1);
+    				break;
+    			case "#stop": //not sure if this is right 
+    				stopListening();
+    				break;
+    			case "#close": //not sure if this is right
+    				close();
+    				break;
+    			case "#setport":
+    				if (isListening()) {
+    					serverUI.display("Error - please close server before changing port");
+    				} else {
+    					try {
+    						setPort(Integer.parseInt(command[1]));
+    						serverUI.display("port set to: " + Integer.parseInt(command[1]));
+    					} catch (Exception e) {
+    						serverUI.display("Please specify port");
+    					}
+    				}
+    				break;
+    			case "#start":
+    				if (isListening()) serverUI.display("Already listening");
+    				else listen();
+    				break;
+    			case "#getport":
+    				serverUI.display(Integer.toString(getPort()));
+    				break;
+    		}
+    	} else {
+    		String serverMessage = "SERVER MSG>" + message;
+    		serverUI.display(serverMessage);
+    		this.sendToAllClients(serverMessage);
+    	}
+    }
+    catch(IOException e)
+    {
+      serverUI.display("Could not send message to clients.  Terminating server.");
+      //close();
+      System.exit(1);
+    }
   }
     
   /**
@@ -79,12 +184,13 @@ public class EchoServer extends AbstractServer
    */
   @Override
   protected void clientConnected(ConnectionToClient client) {
-	  System.out.println("Client has connected");
+	  System.out.println("A new client is attempting to connect to the server.");
+	  client.setInfo("newConnect", "new");
   }
   
   @Override
   synchronized protected void clientDisconnected(ConnectionToClient client) {
-	  System.out.println("Client has disconnected");
+	  System.out.println(client.getInfo("loginID") + " has disconnected");
   }
   
   //Class methods ***************************************************
